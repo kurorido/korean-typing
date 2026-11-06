@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>韓文打字練習 · 한글 타자 연습</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">한</span>
+      <div>
+        <h1>韓文打字練習</h1>
+        <p>한글 타자 연습 · 兩班式鍵盤（두벌식）</p>
+      </div>
+    </div>
+    <nav class="modes" id="modes">
+      <button data-mode="jamo" class="active">字母</button>
+      <button data-mode="syllable">音節</button>
+      <button data-mode="word">單字</button>
+      <button data-mode="sentence">句子</button>
+      <button data-mode="dialogue">情境對話</button>
+    </nav>
+    <label class="ime-toggle" title="開啟後不需安裝韓文輸入法，直接用英文鍵盤即可打出韓文">
+      <input type="checkbox" id="builtinIme" checked />
+      <span class="switch"></span>
+      <span>內建韓文輸入</span>
+    </label>
+    <button class="bank-open" id="bankOpen">📚 題庫管理</button>
+  </header>
+
+  <main class="layout">
+    <section class="practice">
+      <div class="stats">
+        <div class="stat"><span id="statAcc">100%</span><label>正確率</label></div>
+        <div class="stat"><span id="statDone">0</span><label>完成題數</label></div>
+        <button class="ghost" id="resetBtn" title="重新統計完成題數與正確率">↺ 重置統計</button>
+      </div>
+
+      <div class="card target-card">
+        <div class="dialogue-bar" id="dialogueBar" hidden></div>
+        <div class="target" id="target"></div>
+        <div class="target-roman" id="targetRoman"></div>
+        <div class="meaning" id="meaning"></div>
+        <div class="upnext" id="upnext"></div>
+      </div>
+
+      <div class="input-wrap">
+        <input id="typing" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="點這裡開始打字…" />
+        <div class="hint" id="hint"></div>
+      </div>
+
+      <div class="options" id="options"></div>
+
+      <div class="keyboard" id="keyboard"></div>
+      <p class="tip" id="keyboardTip">⌨️ 鍵盤上 <b class="hl-demo">亮起</b> 的是下一個要按的鍵。Enter 跳過目前題目，Esc 清空輸入。</p>
+    </section>
+
+    <aside class="sidebar">
+      <div class="side-head">
+        <h2>韓文字母表</h2>
+        <p>點擊字母可聽發音、並在鍵盤上顯示位置</p>
+      </div>
+      <div id="jamoList"></div>
+    </aside>
+  </main>
+
+  <dialog id="bankDialog" class="bank">
+    <div class="bank-head">
+      <h2>📚 題庫管理</h2>
+      <nav class="bank-tabs" id="bankTabs">
+        <button data-type="word" class="active">單字 <em>0</em></button>
+        <button data-type="sentence">句子 <em>0</em></button>
+      </nav>
+      <button class="bank-x" id="bankClose" title="關閉">✕</button>
+    </div>
+
+    <div class="bank-add">
+      <select id="bankAddCat" title="單字分類"></select>
+      <input id="bankAddKo" lang="ko" placeholder="韓文" />
+      <input id="bankAddZh" placeholder="中文意思（選填）" />
+      <button class="primary" id="bankAddBtn">＋ 新增</button>
+    </div>
+
+    <div class="bank-tools">
+      <select id="bankCatFilter" title="依分類篩選"></select>
+      <input id="bankSearch" type="search" placeholder="🔍 搜尋韓文、拼音或中文…" />
+      <button id="bankAllOn">全部啟用</button>
+      <button id="bankAllOff">全部停用</button>
+      <button id="bankBatchBtn">批次新增</button>
+      <button id="bankExport">匯出</button>
+      <button id="bankImport">匯入</button>
+      <button id="bankReset" class="danger">恢復預設</button>
+      <input type="file" id="bankFile" accept=".json,application/json" hidden />
+    </div>
+
+    <div class="bank-batch" id="bankBatch" hidden>
+      <p>每行一題，用 <code>|</code> 或 Tab 分隔：<code>韓文 | 中文 | 拼音</code>。拼音可省略（會自動產生）；句子裡有逗號時請用 <code>|</code>。</p>
+      <textarea id="bankBatchText" rows="6" lang="ko" placeholder="고양이 | 貓&#10;강아지 | 小狗&#10;저는 학생이에요. | 我是學生。"></textarea>
+      <button class="primary" id="bankBatchAdd">加入題庫</button>
+    </div>
+
+    <div class="bank-count" id="bankCount"></div>
+    <div class="bank-table-wrap">
+      <table class="bank-table">
+        <thead><tr><th title="勾選的題目才會出現在練習中">啟用</th><th>#</th><th id="bankCatTh">分類</th><th>韓文</th><th title="灰字為自動產生，可自行修改">拼音</th><th>中文</th><th></th></tr></thead>
+        <tbody id="bankList"></tbody>
+      </table>
+    </div>
+    <div class="bank-msg" id="bankMsg"></div>
+  </dialog>
+
+  <script src="hangul.js"></script>
+  <script src="data.js"></script>
+  <script src="bank.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
