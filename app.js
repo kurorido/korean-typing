@@ -30,6 +30,7 @@
       saved.opt || {}
     ),
     dlgIdx: 0,          // 情境對話目前的句數索引
+    history: [],        // 已出現過的題目歷史紀錄（供回到上一題）
     queue: [], current: null,
     seq: [],            // 內建輸入法的字母序列
     total: 0, errors: 0, // 按鍵數 / 錯誤按鍵數
@@ -141,8 +142,13 @@
     Object.keys(bags).forEach((k) => {
       if (k === e.detail.type || k.startsWith(e.detail.type + ':')) delete bags[k];
     });
-    if (state.mode === e.detail.type) { state.queue = []; nextItem(); }
+    if (state.mode === e.detail.type) { state.history = []; state.queue = []; state.current = null; nextItem(); }
   });
+
+  function updatePrevBtn() {
+    const btn = $('prevItemBtn');
+    if (btn) btn.disabled = state.mode !== 'dialogue' && state.history.length === 0;
+  }
 
   function stepDialogue(delta) {
     const d = currentDialogue();
@@ -153,6 +159,20 @@
     els.upnext.textContent = nextIdx === 0
       ? `🎉 本篇最後一句（完成後將從第 1 句重新開始）`
       : `下一句（${nextLine.role}）：${nextLine.ko}`;
+    updatePrevBtn();
+    clearInput();
+  }
+
+  function prevItem() {
+    if (state.mode === 'dialogue') {
+      stepDialogue(-1);
+      return;
+    }
+    if (!state.history.length) return;
+    if (state.current) state.queue.unshift(state.current);
+    state.current = state.history.pop();
+    els.upnext.textContent = '下一題：' + state.queue[0].text;
+    updatePrevBtn();
     clearInput();
   }
 
@@ -165,13 +185,19 @@
       els.upnext.textContent = nextIdx === 0
         ? `🎉 本篇最後一句（完成後將從第 1 句重新開始）`
         : `下一句（${nextLine.role}）：${nextLine.ko}`;
+      updatePrevBtn();
       clearInput();
       return;
+    }
+    if (state.current) {
+      state.history.push(state.current);
+      if (state.history.length > 50) state.history.shift();
     }
     while (state.queue.length < 2) state.queue.push(makeItem());
     state.current = state.queue.shift();
     state.queue.push(makeItem());
     els.upnext.textContent = '下一題：' + state.queue[0].text;
+    updatePrevBtn();
     clearInput();
   }
 
@@ -237,7 +263,12 @@
   els.input.addEventListener('keydown', (e) => {
     flashKey(e.code);
     if (e.ctrlKey || e.metaKey || e.altKey) return;
-    if (e.key === 'Enter') { e.preventDefault(); advanceItem(); return; }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (e.shiftKey) prevItem();
+      else advanceItem();
+      return;
+    }
     if (e.key === 'Escape') { e.preventDefault(); clearInput(); return; }
     if (!state.builtin) return;
 
@@ -479,7 +510,9 @@
           if (state.mode === 'dialogue') state.dlgIdx = 0;
           save();
           buildOptions();
+          state.history = [];
           state.queue = [];
+          state.current = null;
           nextItem();
           els.input.focus();
         };
@@ -490,6 +523,22 @@
 
     const tools = document.createElement('div');
     tools.className = 'opt-tools';
+
+    const prevBtn = document.createElement('button');
+    prevBtn.id = 'prevItemBtn';
+    prevBtn.className = 'chip-btn';
+    prevBtn.textContent = '◀ 上一題';
+    prevBtn.title = '回到上一題（Shift + Enter）';
+    prevBtn.disabled = state.mode !== 'dialogue' && state.history.length === 0;
+    prevBtn.onclick = () => { prevItem(); els.input.focus(); };
+    tools.appendChild(prevBtn);
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'chip-btn';
+    nextBtn.textContent = '下一題 ▶';
+    nextBtn.title = '跳到下一題（Enter）';
+    nextBtn.onclick = () => { advanceItem(); els.input.focus(); };
+    tools.appendChild(nextBtn);
 
     const romBtn = document.createElement('button');
     romBtn.className = 'chip-btn' + (state.opt.showRoman ? ' active' : '');
@@ -530,7 +579,9 @@
     if (mode === 'dialogue') state.dlgIdx = 0;
     save();
     [...els.modes.children].forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
+    state.history = [];
     state.queue = [];
+    state.current = null;
     buildOptions();
     nextItem();
     els.input.focus();
@@ -561,7 +612,7 @@
     if (els.done) els.done.textContent = state.done;
   }
 
-  els.reset.addEventListener('click', () => { resetStats(); state.queue = []; nextItem(); els.input.focus(); });
+  els.reset.addEventListener('click', () => { resetStats(); state.history = []; state.queue = []; state.current = null; nextItem(); els.input.focus(); });
 
   // 點擊題目區也聚焦輸入框
   els.card.addEventListener('click', () => els.input.focus());

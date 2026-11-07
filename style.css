@@ -160,7 +160,8 @@ kbd {
 .chip-btn {
   background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; font-size: 14px; color: var(--muted);
 }
-.chip-btn:hover { color: var(--text); }
+.chip-btn:hover:not(:disabled) { color: var(--text); }
+.chip-btn:disabled { opacity: .4; cursor: not-allowed; }
 .chip-btn.active { border-color: var(--accent); color: var(--text); background: rgba(108, 140, 255, .15); }
 
 /* ---------- 虛擬鍵盤 ---------- */
